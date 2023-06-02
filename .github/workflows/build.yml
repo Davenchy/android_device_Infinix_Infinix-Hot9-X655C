@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Fetch Repo
         run: |
-          mkdir -p $HOME/workspace/device${{ github.event.inputs.DEVICE_PATH }} && cd /workspace
+          mkdir -p $HOME/workspace/device${{ github.event.inputs.DEVICE_PATH }} && cd $HOME/workspace
           repo init --depth=1 -u ${{ github.event.inputs.TWRP_MANIFEST_REPO_URL }} -b ${{ github.event.inputs.BRANCH }}
       - name: Sync Repo
         run: |

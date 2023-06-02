@@ -26,11 +26,11 @@ jobs:
     steps:
       - name: Fetch Repo
         run: |
-          mkdir -p /workspace/device${{ github.event.inputs.DEVICE_PATH }} && cd /workspace
+          mkdir -p $HOME/workspace/device${{ github.event.inputs.DEVICE_PATH }} && cd /workspace
           repo init --depth=1 -u ${{ github.event.inputs.TWRP_MANIFEST_REPO_URL }} -b ${{ github.event.inputs.BRANCH }}
       - name: Sync Repo
         run: |
-          cd /workspace
+          cd $HOME/workspace
           repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
           ls -al
       - name: Checkout Device Tree
@@ -39,7 +39,7 @@ jobs:
           path: /workspace/device${{ github.event.inputs.DEVICE_PATH }}
       - name: Compile
         run: |
-           cd /workspace
+           cd $HOME/workspace
            export ALLOW_MISSING_DEPENDENCIES=true
            source build/envsetup.sh
            lunch twrp_${{ github.event.inputs.DEVICE_NAME }}-eng
@@ -48,11 +48,11 @@ jobs:
            make -j$(nproc --all) recoveryimage
            make -j$(nproc --all) bootimage
            echo "Build Complete!"
-           ls -al /workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/
+           ls -al $HOME/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          files: /workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.img
+          files: $HOME/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.img
           name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
           tag_name: ${{ github.run_id }}
           body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}

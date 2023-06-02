@@ -1,0 +1,60 @@
+name: Build TWRP Recovery Image
+on:
+  workflow_dispatch:
+    inputs:
+      TWRP_MANIFEST_REPO_URL:
+        description: The url of the TWRP manifest repo
+        required: true
+        default: git://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git
+      BRANCH:
+        description: The TWRP manifest repo branch to use
+        required: true
+        default: twrp-12.1
+      DEVICE_PATH:
+        description: The path to copy the device tree files to
+        required: true
+        default: /infinix/Infinix-X655C/
+      DEVICE_NAME:
+        description: The device name
+        required: true
+        default: Infinix-X655C
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    container:
+      image: fr3akyphantom/droid-builder:latest
+    steps:
+      - name: Fetch Repo
+        run: |
+          mkdir -p /workspace/device${{ github.event.inputs.DEVICE_PATH }} && cd /workspace
+          repo init --depth=1 -u ${{ github.event.inputs.TWRP_MANIFEST_REPO_URL }} -b ${{ github.event.inputs.BRANCH }}
+      - name: Sync Repo
+        run: |
+          cd /workspace
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+          ls -al
+      - name: Checkout Device Tree
+        uses: actions/checkout@v2
+        with:
+          path: /workspace/device${{ github.event.inputs.DEVICE_PATH }}
+      - name: Compile
+        run: |
+           cd /workspace
+           export ALLOW_MISSING_DEPENDENCIES=true
+           source build/envsetup.sh
+           lunch twrp_${{ github.event.inputs.DEVICE_NAME }}-eng
+           ls -al
+           echo "Building..."
+           make -j$(nproc --all) recoveryimage
+           make -j$(nproc --all) bootimage
+           echo "Build Complete!"
+           ls -al /workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: /workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.img
+          name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
+          tag_name: ${{ github.run_id }}
+          body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

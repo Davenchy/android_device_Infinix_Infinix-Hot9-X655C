@@ -27,11 +27,14 @@ jobs:
           mkdir ~/bin
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
           chmod u+x ~/bin/repo
-      - name: Fetch TWRP Manifest
+      - name: Init TWRP Manifest Repo
         run: |
           mkdir -p $HOME/twrp/device${{ github.event.inputs.DEVICE_PATH }}
           cd $HOME/twrp
           ~/bin/repo init --depth=1 -u ${{ github.event.inputs.TWRP_MANIFEST_REPO_URL }} -b ${{ github.event.inputs.BRANCH }}
+      - name: Sync TWRP Repo
+        run: |
+          cd $HOME/twrp
           ~/bin/repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
           ls -al
       - name: Checkout Device Tree

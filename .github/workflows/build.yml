@@ -24,14 +24,15 @@ jobs:
     steps:
       - name: Install repo tool
         run: |
-          curl https://storage.googleapis.com/git-repo-downloads/repo > /bin/repo
-          chmod u+x /bin/repo
+          mkdir ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod u+x ~/bin/repo
       - name: Fetch TWRP Manifest
         run: |
           mkdir -p $HOME/twrp/device${{ github.event.inputs.DEVICE_PATH }}
           cd $HOME/twrp
-          repo init --depth=1 -u ${{ github.event.inputs.TWRP_MANIFEST_REPO_URL }} -b ${{ github.event.inputs.BRANCH }}
-          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+          ~/bin/repo init --depth=1 -u ${{ github.event.inputs.TWRP_MANIFEST_REPO_URL }} -b ${{ github.event.inputs.BRANCH }}
+          ~/bin/repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
           ls -al
       - name: Checkout Device Tree
         uses: actions/checkout@v2

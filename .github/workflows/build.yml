@@ -24,7 +24,8 @@ jobs:
     steps:
       - name: Install repo tool
         run: |
-          wget -O /bin/repo && chmod u+x /bin/repo
+          curl https://storage.googleapis.com/git-repo-downloads/repo > /bin/repo
+          chmod u+x /bin/repo
       - name: Fetch TWRP Manifest
         run: |
           mkdir -p $HOME/twrp/device${{ github.event.inputs.DEVICE_PATH }}

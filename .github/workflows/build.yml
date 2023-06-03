@@ -5,7 +5,7 @@ on:
       TWRP_MANIFEST_REPO_URL:
         description: The url of the TWRP manifest repo
         required: true
-        default: git://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git
+        default: https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git
       BRANCH:
         description: The TWRP manifest repo branch to use
         required: true
@@ -31,6 +31,7 @@ jobs:
         run: |
           mkdir -p $HOME/twrp/device${{ github.event.inputs.DEVICE_PATH }}
           cd $HOME/twrp
+          git config --global color.ui true
           ~/bin/repo init --depth=1 -u ${{ github.event.inputs.TWRP_MANIFEST_REPO_URL }} -b ${{ github.event.inputs.BRANCH }}
       - name: Sync TWRP Repo
         run: |

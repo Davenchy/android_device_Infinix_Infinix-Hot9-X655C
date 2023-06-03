@@ -1,4 +1,4 @@
-# Android device tree for Infinix Infinix X655C (Infinix-Hot9-X655C)
+# Android device tree for Infinix Infinix X655C (Infinix-X655C)
 
 ```
 #

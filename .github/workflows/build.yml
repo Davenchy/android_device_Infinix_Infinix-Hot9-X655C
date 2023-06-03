@@ -21,25 +21,24 @@ on:
 jobs:
   compile:
     runs-on: ubuntu-latest
-    container:
-      image: fr3akyphantom/droid-builder:latest
     steps:
-      - name: Fetch Repo
+      - name: Install repo tool
         run: |
-          mkdir -p $HOME/workspace/device${{ github.event.inputs.DEVICE_PATH }} && cd $HOME/workspace
+          wget -O /bin/repo && chmod u+x /bin/repo
+      - name: Fetch TWRP Manifest
+        run: |
+          mkdir -p $HOME/twrp/device${{ github.event.inputs.DEVICE_PATH }}
+          cd $HOME/twrp
           repo init --depth=1 -u ${{ github.event.inputs.TWRP_MANIFEST_REPO_URL }} -b ${{ github.event.inputs.BRANCH }}
-      - name: Sync Repo
-        run: |
-          cd $HOME/workspace
           repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
           ls -al
       - name: Checkout Device Tree
         uses: actions/checkout@v2
         with:
-          path: /workspace/device${{ github.event.inputs.DEVICE_PATH }}
+          path: $HOME/twrp/device${{ github.event.inputs.DEVICE_PATH }}
       - name: Compile
         run: |
-           cd $HOME/workspace
+           cd $HOME/twrp
            export ALLOW_MISSING_DEPENDENCIES=true
            source build/envsetup.sh
            lunch twrp_${{ github.event.inputs.DEVICE_NAME }}-eng
@@ -48,13 +47,22 @@ jobs:
            make -j$(nproc --all) recoveryimage
            make -j$(nproc --all) bootimage
            echo "Build Complete!"
-           ls -al $HOME/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/
+           ls -al $HOME/twrp/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/
+      - name: Generate Id
+        id: name
+        run: echo "NAME=${{ github.event.inputs.DEVICE_NAME }}-$(date +'%Y%m%d')" >> $GITHUB_ENV
+      - name: Copy Releases
+        run: |
+          cp $HOME/twrp/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery.img $HOME/twrp-recovery-$NAME.img
+          cp $HOME/twrp/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/boot.img $HOME/twrp-boot-$NAME.img
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          files: $HOME/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.img
-          name: ${{ github.event.inputs.DEVICE_NAME }}-${{ github.run_id }}
-          tag_name: ${{ github.run_id }}
+          files: |
+            $HOME/twrp-recovery-$NAME.img
+            $HOME/twrp-boot-$NAME.img
+          name: $NAME
+          tag_name: $NAME
           body: Recovery for ${{ github.event.inputs.DEVICE_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
